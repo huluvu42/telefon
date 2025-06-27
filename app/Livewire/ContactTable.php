@@ -1,6 +1,5 @@
 <?php
 
-// app/Livewire/ContactTable.php
 namespace App\Livewire;
 
 use App\Models\Contact;

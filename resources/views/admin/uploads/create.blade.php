@@ -1,4 +1,3 @@
-// resources/views/admin/uploads/create.blade.php
 <x-app-layout>
     <div class="px-4 sm:px-0">
         <div class="max-w-2xl mx-auto">

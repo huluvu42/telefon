@@ -1,6 +1,5 @@
 <?php
 
-// app/Services/ExcelImportService.php
 namespace App\Services;
 
 use App\Models\Contact;
@@ -167,20 +166,27 @@ class ExcelImportService
     
     private function generateMobilePdf(UploadedFile $file, Upload $upload): void
     {
-        $spreadsheet = IOFactory::load($file->getRealPath());
-        $writer = new Mpdf($spreadsheet);
-        
-        $pdfPath = storage_path('app/public/mobile_lists/' . $upload->filename . '.pdf');
-        
-        if (!file_exists(dirname($pdfPath))) {
-            mkdir(dirname($pdfPath), 0755, true);
+        try {
+            $spreadsheet = IOFactory::load($file->getRealPath());
+            $writer = new Mpdf($spreadsheet);
+            
+            $pdfPath = storage_path('app/public/mobile_lists/' . $upload->filename . '.pdf');
+            
+            if (!file_exists(dirname($pdfPath))) {
+                mkdir(dirname($pdfPath), 0755, true);
+            }
+            
+            $writer->save($pdfPath);
+            
+            $upload->update([
+                'processing_log' => array_merge($upload->processing_log ?? [], ['pdf_generated' => true])
+            ]);
+        } catch (\Exception $e) {
+            // PDF generation failed, but continue
+            $upload->update([
+                'processing_log' => array_merge($upload->processing_log ?? [], ['pdf_error' => $e->getMessage()])
+            ]);
         }
-        
-        $writer->save($pdfPath);
-        
-        $upload->update([
-            'processing_log' => array_merge($upload->processing_log ?? [], ['pdf_generated' => true])
-        ]);
     }
     
     private function createUploadRecord(UploadedFile $file, string $type, int $userId): Upload

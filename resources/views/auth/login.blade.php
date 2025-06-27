@@ -1,4 +1,3 @@
-// resources/views/auth/login.blade.php
 <x-guest-layout>
     <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div class="max-w-md w-full space-y-8">
@@ -26,10 +25,10 @@
                 
                 <div class="rounded-md shadow-sm -space-y-px">
                     <div>
-                        <label for="email" class="sr-only">E-Mail oder Benutzername</label>
-                        <input id="email" name="email" type="text" required 
+                        <label for="email" class="sr-only">E-Mail</label>
+                        <input id="email" name="email" type="email" required 
                                class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" 
-                               placeholder="E-Mail oder Benutzername"
+                               placeholder="E-Mail-Adresse"
                                value="{{ old('email') }}">
                     </div>
                     <div>
@@ -57,13 +56,14 @@
                     </button>
                 </div>
                 
-                @if(config('ldap.enabled'))
-                    <div class="text-center">
-                        <p class="text-xs text-gray-500">
-                            LDAP-Authentifizierung aktiviert
-                        </p>
-                    </div>
-                @endif
+                <div class="text-center">
+                    <p class="text-sm text-gray-600">
+                        Noch kein Konto? 
+                        <a href="{{ route('register') }}" class="font-medium text-blue-600 hover:text-blue-500">
+                            Hier registrieren
+                        </a>
+                    </p>
+                </div>
             </form>
         </div>
     </div>

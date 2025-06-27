@@ -1,4 +1,3 @@
-// resources/views/livewire/contact-table.blade.php
 <div>
     <!-- Search and Filters -->
     <div class="mb-6 space-y-4">
