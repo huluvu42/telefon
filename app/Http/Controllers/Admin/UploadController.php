@@ -1,10 +1,10 @@
 <?php
 
-// app/Http/Controllers/Admin/UploadController.php
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\ExcelImportService;
+use App\Models\Upload; // ← Dieser Import fehlte!
 use Illuminate\Http\Request;
 
 class UploadController extends Controller
@@ -36,23 +36,32 @@ class UploadController extends Controller
         $file = $request->file('file');
         $type = $request->input('type');
         
-        if ($type === 'main') {
-            $result = $this->importService->importMainList($file, auth()->id());
-        } else {
-            $result = $this->importService->importMobileList($file, auth()->id());
-        }
-        
-        if ($result['success']) {
-            if ($request->boolean('sync_mobile_data') && $type === 'mobile') {
-                $syncResult = $this->importService->syncMobileData();
-                $result['synced'] = $syncResult['synced'];
+        try {
+            if ($type === 'main') {
+                $result = $this->importService->importMainList($file, auth()->id());
+            } else {
+                $result = $this->importService->importMobileList($file, auth()->id());
             }
             
-            return redirect()->route('admin.uploads.index')
-                ->with('success', 'File uploaded successfully. ' . 
-                    ($result['imported'] ?? 0) . ' records processed.');
-        } else {
-            return back()->withErrors(['file' => $result['error']]);
+            if ($result['success']) {
+                $message = 'File uploaded successfully. ';
+                
+                if (isset($result['imported'])) {
+                    $message .= $result['imported'] . ' records processed.';
+                }
+                
+                if ($request->boolean('sync_mobile_data') && $type === 'mobile') {
+                    $syncResult = $this->importService->syncMobileData();
+                    $message .= ' ' . $syncResult['synced'] . ' mobile numbers synced.';
+                }
+                
+                return redirect()->route('admin.uploads.index')
+                    ->with('success', $message);
+            } else {
+                return back()->withErrors(['file' => $result['error']]);
+            }
+        } catch (\Exception $e) {
+            return back()->withErrors(['file' => 'Upload failed: ' . $e->getMessage()]);
         }
     }
 }

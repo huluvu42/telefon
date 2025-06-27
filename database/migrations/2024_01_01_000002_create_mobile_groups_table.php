@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 // database/migrations/2024_01_01_000002_create_mobile_groups_table.php
-class CreateMobileGroupsTable extends Migration
+return new class extends Migration
 {
     public function up()
     {
@@ -23,4 +23,4 @@ class CreateMobileGroupsTable extends Migration
     {
         Schema::dropIfExists('mobile_groups');
     }
-}
+};

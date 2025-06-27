@@ -1,4 +1,3 @@
-// resources/views/admin/contacts/index.blade.php
 <x-app-layout>
     <div class="px-4 sm:px-0">
         <div class="bg-white shadow rounded-lg">

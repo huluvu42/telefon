@@ -57,11 +57,8 @@
                 </div>
                 
                 <div class="text-center">
-                    <p class="text-sm text-gray-600">
-                        Noch kein Konto? 
-                        <a href="{{ route('register') }}" class="font-medium text-blue-600 hover:text-blue-500">
-                            Hier registrieren
-                        </a>
+                    <p class="text-xs text-gray-500">
+                        Kein Konto? Kontaktieren Sie Ihren Administrator.
                     </p>
                 </div>
             </form>

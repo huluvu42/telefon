@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 // database/migrations/2024_01_01_000001_create_contacts_table.php
-class CreateContactsTable extends Migration
+return new class extends Migration
 {
     public function up()
     {
@@ -34,4 +34,4 @@ class CreateContactsTable extends Migration
     {
         Schema::dropIfExists('contacts');
     }
-}
+};
