@@ -1,5 +1,4 @@
 <?php
-
 // app/Http/Controllers/MobileListController.php
 namespace App\Http\Controllers;
 
@@ -10,31 +9,19 @@ use Illuminate\Http\Response;
 class MobileListController extends Controller
 {
     public function index()
-    {
-        $sheets = MobileGroup::select('sheet_name')
-            ->distinct()
-            ->orderBy('sheet_name')
-            ->pluck('sheet_name');
-            
-        return view('mobile-list.index', compact('sheets'));
-    }
+{
+    // Lade alle Gruppen mit besserer Sortierung
+    $groups = MobileGroup::with(['entries' => function($query) {
+        $query->orderBy('order_position');
+    }])
+    ->orderBy('order_position') // Wichtig: Nach order_position sortieren
+    ->get();
     
-    public function show(string $sheetName)
-    {
-        $groups = MobileGroup::where('sheet_name', $sheetName)
-            ->with(['entries' => function($query) {
-                $query->orderBy('order_position');
-            }])
-            ->orderBy('column_position')
-            ->orderBy('order_position')
-            ->get();
-            
-        $groupedByColumn = $groups->groupBy('column_position');
-        
-        return view('mobile-list.show', compact('groupedByColumn', 'sheetName'));
-    }
     
-    public function printPdf(string $sheetName)
+    return view('mobile-list.index', compact('groups'));
+}
+    
+    public function printPdf()
     {
         $upload = Upload::where('type', 'mobile')
             ->latest()
@@ -52,7 +39,7 @@ class MobileListController extends Controller
         
         return response()->file($pdfPath, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . $sheetName . '.pdf"'
+            'Content-Disposition' => 'inline; filename="Mobiltelefonliste.pdf"'
         ]);
     }
 }
