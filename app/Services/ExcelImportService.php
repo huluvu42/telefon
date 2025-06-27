@@ -99,7 +99,7 @@ class ExcelImportService
             $spreadsheet = IOFactory::load($file->getRealPath());
             $results = [];
             
-            Log::info('Mobile list import started', ['sheets' => count($spreadsheet->getWorksheetIterator())]);
+            Log::info('Mobile list import started', ['sheets' => $spreadsheet->getSheetCount()]);
             
             foreach ($spreadsheet->getWorksheetIterator() as $worksheet) {
                 $sheetName = $worksheet->getTitle();
@@ -204,37 +204,90 @@ class ExcelImportService
         return ['groups' => count($groups), 'entries' => $imported];
     }
     
-    private function generateMobilePdf(UploadedFile $file, Upload $upload): void
-    {
-        try {
-            $spreadsheet = IOFactory::load($file->getRealPath());
+private function generateMobilePdf(UploadedFile $file, Upload $upload): void
+{
+    try {
+        set_time_limit(60);
+        ini_set('memory_limit', '256M');
+        
+        // Erstelle eine temporäre Datei mit .xlsx-Endung
+        $tempDir = storage_path('app/temp/');
+        if (!file_exists($tempDir)) {
+            mkdir($tempDir, 0755, true);
+        }
+        
+        $tempExcelFile = $tempDir . uniqid() . '.xlsx';
+        copy($file->getRealPath(), $tempExcelFile);
+        
+        $outputDir = storage_path('app/public/mobile_lists/');
+        if (!file_exists($outputDir)) {
+            mkdir($outputDir, 0755, true);
+        }
+        
+        // LibreOffice Kommando mit korrektem Dateipfad
+        $command = sprintf(
+            'cd %s && libreoffice --headless --convert-to pdf --outdir %s %s',
+            escapeshellarg($tempDir),
+            escapeshellarg($outputDir),
+            escapeshellarg($tempExcelFile)
+        );
+        
+        Log::info('Executing LibreOffice command', ['command' => $command]);
+        
+        $result = shell_exec($command . ' 2>&1');
+        
+        Log::info('LibreOffice output', ['result' => $result]);
+        
+        // Erwarteter PDF-Pfad
+        $tempPdfName = pathinfo($tempExcelFile, PATHINFO_FILENAME) . '.pdf';
+        $generatedPdfPath = $outputDir . $tempPdfName;
+        $finalPdfPath = $outputDir . $upload->filename . '.pdf';
+        
+        if (file_exists($generatedPdfPath)) {
+            // Umbenennen zum finalen Namen
+            rename($generatedPdfPath, $finalPdfPath);
             
-            // Set proper PDF settings for multiple pages
-            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Pdf\Mpdf($spreadsheet);
-            $writer->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE);
-            $writer->setPaperSize(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::PAPERSIZE_A4);
+            // Temporäre Datei löschen
+            unlink($tempExcelFile);
             
-            $pdfPath = storage_path('app/public/mobile_lists/' . $upload->filename . '.pdf');
+            Log::info('PDF generated successfully with LibreOffice', ['path' => $finalPdfPath]);
             
-            if (!file_exists(dirname($pdfPath))) {
-                mkdir(dirname($pdfPath), 0755, true);
+            $upload->update([
+                'processing_log' => array_merge($upload->processing_log ?? [], [
+                    'pdf_generated' => true,
+                    'method' => 'libreoffice_corrected'
+                ])
+            ]);
+        } else {
+            // Temporäre Datei löschen auch bei Fehler
+            if (file_exists($tempExcelFile)) {
+                unlink($tempExcelFile);
             }
             
-            $writer->save($pdfPath);
+            throw new \Exception('LibreOffice PDF not found. Output: ' . $result);
+        }
+        
+    } catch (\Exception $e) {
+        Log::error('PDF generation failed', ['error' => $e->getMessage()]);
+        
+        // Fallback: Excel-Datei verfügbar machen
+        try {
+            $excelPath = storage_path('app/public/mobile_lists/' . $upload->filename . '.xlsx');
+            copy($file->getRealPath(), $excelPath);
             
-            Log::info('PDF generated', ['path' => $pdfPath]);
+            Log::info('Excel file saved as fallback', ['path' => $excelPath]);
             
             $upload->update([
-                'processing_log' => array_merge($upload->processing_log ?? [], ['pdf_generated' => true])
+                'processing_log' => array_merge($upload->processing_log ?? [], [
+                    'excel_saved' => true,
+                    'pdf_generation_failed' => $e->getMessage()
+                ])
             ]);
-        } catch (\Exception $e) {
-            Log::error('PDF generation failed', ['error' => $e->getMessage()]);
-            
-            $upload->update([
-                'processing_log' => array_merge($upload->processing_log ?? [], ['pdf_error' => $e->getMessage()])
-            ]);
+        } catch (\Exception $fallbackError) {
+            Log::error('Fallback also failed', ['error' => $fallbackError->getMessage()]);
         }
     }
+}
     
     private function createUploadRecord(UploadedFile $file, string $type, int $userId): Upload
     {
