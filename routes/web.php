@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\UploadController;
 use App\Http\Controllers\Admin\ContactController;
 use App\Http\Controllers\MobileListController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Admin\UserController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -66,20 +67,13 @@ Route::get('/debug-excel', function() {
     return response()->json($debug);
 });
 
-// Weitere Debug-Route:
-Route::get('/debug-mobile-import', function() {
-    $upload = \App\Models\Upload::where('type', 'mobile')->latest()->first();
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     
-    if (!$upload) {
-        return 'Keine Upload gefunden';
-    }
+    Route::resource('contacts', ContactController::class);
+    Route::resource('uploads', UploadController::class)->only(['index', 'create', 'store']);
     
-    $filePath = storage_path('app/public/uploads/' . $upload->filename);
-    
-    $service = new \App\Services\ExcelImportService();
-    $debug = $service->debugMobileImport($filePath);
-    
-    return response()->json($debug);
+    // Neue Benutzerverwaltung
+    Route::resource('users', UserController::class);
 });
-
 require __DIR__.'/auth.php';
