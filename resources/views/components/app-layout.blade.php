@@ -1,3 +1,4 @@
+{{-- resources/views/components/app-layout.blade.php --}}
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -19,9 +20,9 @@
 </head>
 <body class="font-sans antialiased bg-gray-50">
     <div class="min-h-screen">
-        <!-- Navigation -->
+        <!-- Navigation - Vollbreite für Kontakte-Seite, begrenzt für andere -->
         <nav class="bg-white shadow-sm border-b border-gray-200">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="{{ request()->routeIs('contacts.*') ? 'w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8' }}">
                 <div class="flex justify-between items-center h-16">
                     <div class="flex items-center">
                         <a href="{{ route('contacts.index') }}" class="text-xl font-semibold text-gray-900">
@@ -84,16 +85,16 @@
             </div>
         </nav>
         
-        <!-- Page Content -->
-        <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Page Content - Vollbreite für Kontakte-Seite, begrenzt für andere -->
+        <main class="{{ request()->routeIs('contacts.*') ? 'w-full py-6' : 'max-w-7xl mx-auto py-6 sm:px-6 lg:px-8' }}">
             @if (session('success'))
-                <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+                <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded {{ request()->routeIs('contacts.*') ? 'mx-4 sm:mx-6 lg:mx-8 xl:mx-12 2xl:mx-16' : '' }}">
                     {{ session('success') }}
                 </div>
             @endif
             
             @if (session('error'))
-                <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded {{ request()->routeIs('contacts.*') ? 'mx-4 sm:mx-6 lg:mx-8 xl:mx-12 2xl:mx-16' : '' }}">
                     {{ session('error') }}
                 </div>
             @endif

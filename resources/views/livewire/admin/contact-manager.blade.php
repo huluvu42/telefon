@@ -1,4 +1,4 @@
-// resources/views/livewire/admin/contact-manager.blade.php
+{{-- resources/views/livewire/admin/contact-manager.blade.php --}}
 <div>
     @if (session()->has('message'))
         <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
